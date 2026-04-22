@@ -67,9 +67,132 @@
         button:hover {
             background: #45a049;
         }
+
+        /* Mobile Controls */
+        #mobileControls {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            gap: 20px;
+        }
+
+        .mobile-btn {
+            background: rgba(70, 130, 180, 0.8);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            font-size: 20px;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        .mobile-btn:active {
+            background: rgba(70, 130, 180, 1);
+            transform: scale(0.95);
+        }
+
+        .d-pad {
+            display: grid;
+            grid-template-columns: 60px 60px 60px;
+            grid-template-rows: 60px 60px;
+            gap: 5px;
+        }
+
+        #leftBtn { grid-column: 1; grid-row: 2; }
+        #rightBtn { grid-column: 3; grid-row: 2; }
+        #jumpBtn { grid-column: 2; grid-row: 1; }
+
+        #fullscreenBtn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(70, 130, 180, 0.8);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 15px;
+            font-size: 14px;
+            z-index: 1000;
+            cursor: pointer;
+        }
+
+        #fullscreenBtn:hover {
+            background: rgba(70, 130, 180, 1);
+        }
+
+        /* Mobile styles */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            #gameContainer {
+                width: 100%;
+                max-width: 100vw;
+            }
+            
+            canvas {
+                width: 100%;
+                height: auto;
+                max-width: 100vw;
+            }
+            
+            #mobileControls {
+                display: flex;
+            }
+            
+            #controls {
+                font-size: 12px;
+            }
+            
+            h1 {
+                font-size: 1.5em;
+                margin: 10px 0;
+            }
+        }
+
+        /* Fullscreen styles */
+        body.fullscreen {
+            padding: 0;
+            background: #000;
+        }
+
+        body.fullscreen #gameContainer {
+            width: 100vw;
+            height: 100vh;
+            border: none;
+            border-radius: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        body.fullscreen canvas {
+            max-width: 100vw;
+            max-height: 100vh;
+            object-fit: contain;
+        }
+
+        body.fullscreen h1,
+        body.fullscreen #gameInfo,
+        body.fullscreen #controls {
+            display: none;
+        }
     </style>
 </head>
 <body>
+    <button id="fullscreenBtn" onclick="toggleFullscreen()">⛶ Fullscreen</button>
+    
     <h1>🎮 Simple Platformer Adventure</h1>
     <div id="gameInfo">Score: <span id="score">0</span> | Lives: <span id="lives">3</span></div>
 
@@ -82,8 +205,18 @@
         </div>
     </div>
 
+    <!-- Mobile Controls -->
+    <div id="mobileControls">
+        <div class="d-pad">
+            <button id="jumpBtn" class="mobile-btn">↑</button>
+            <button id="leftBtn" class="mobile-btn">←</button>
+            <button id="rightBtn" class="mobile-btn">→</button>
+        </div>
+    </div>
+
     <div id="controls">
         <p><strong>Controls:</strong> Arrow Keys or WASD to move, Spacebar or Up Arrow to jump</p>
+        <p>📱 <strong>Mobile:</strong> Use touch buttons below on mobile devices</p>
         <p>Collect coins (⭐) and avoid enemies (👾)!</p>
     </div>
 
@@ -402,8 +535,115 @@
             requestAnimationFrame(gameLoop);
         }
 
+        // Mobile Controls
+        let mobileControls = {
+            left: false,
+            right: false,
+            jump: false
+        };
+
+        // Touch event handlers
+        function addMobileControls() {
+            const leftBtn = document.getElementById('leftBtn');
+            const rightBtn = document.getElementById('rightBtn');
+            const jumpBtn = document.getElementById('jumpBtn');
+
+            // Left button
+            leftBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                mobileControls.left = true;
+                keys['arrowleft'] = true;
+            });
+            leftBtn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                mobileControls.left = false;
+                keys['arrowleft'] = false;
+            });
+
+            // Right button
+            rightBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                mobileControls.right = true;
+                keys['arrowright'] = true;
+            });
+            rightBtn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                mobileControls.right = false;
+                keys['arrowright'] = false;
+            });
+
+            // Jump button
+            jumpBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                mobileControls.jump = true;
+                keys['arrowup'] = true;
+            });
+            jumpBtn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                mobileControls.jump = false;
+                keys['arrowup'] = false;
+            });
+
+            // Prevent context menu on long press
+            [leftBtn, rightBtn, jumpBtn].forEach(btn => {
+                btn.addEventListener('contextmenu', (e) => e.preventDefault());
+                btn.addEventListener('touchmove', (e) => e.preventDefault());
+            });
+        }
+
+        // Fullscreen functionality
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().then(() => {
+                    document.body.classList.add('fullscreen');
+                    document.getElementById('fullscreenBtn').textContent = '⚏ Exit';
+                }).catch(err => {
+                    console.log('Fullscreen failed:', err);
+                });
+            } else {
+                document.exitFullscreen().then(() => {
+                    document.body.classList.remove('fullscreen');
+                    document.getElementById('fullscreenBtn').textContent = '⛶ Fullscreen';
+                });
+            }
+        }
+
+        // Listen for fullscreen changes
+        document.addEventListener('fullscreenchange', () => {
+            if (!document.fullscreenElement) {
+                document.body.classList.remove('fullscreen');
+                document.getElementById('fullscreenBtn').textContent = '⛶ Fullscreen';
+            }
+        });
+
+        // Responsive canvas sizing
+        function resizeCanvas() {
+            const container = document.getElementById('gameContainer');
+            const containerRect = container.getBoundingClientRect();
+            
+            if (document.body.classList.contains('fullscreen')) {
+                // In fullscreen, use viewport dimensions while maintaining aspect ratio
+                const aspectRatio = 800 / 600;
+                let newWidth = window.innerWidth;
+                let newHeight = window.innerHeight;
+                
+                if (newWidth / newHeight > aspectRatio) {
+                    newWidth = newHeight * aspectRatio;
+                } else {
+                    newHeight = newWidth / aspectRatio;
+                }
+                
+                canvas.style.width = newWidth + 'px';
+                canvas.style.height = newHeight + 'px';
+            }
+        }
+
+        // Handle window resize
+        window.addEventListener('resize', resizeCanvas);
+
         // Start the game
         initGame();
+        addMobileControls();
         gameLoop();
     </script>
 </body>
