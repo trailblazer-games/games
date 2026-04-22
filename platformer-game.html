@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Platformer Game</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #87CEEB;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #gameContainer {
+            background: #87CEEB;
+            border: 3px solid #4682B4;
+            border-radius: 10px;
+            position: relative;
+        }
+
+        canvas {
+            display: block;
+            background: linear-gradient(to bottom, #87CEEB 0%, #98FB98 100%);
+        }
+
+        #gameInfo {
+            margin: 10px 0;
+            font-size: 18px;
+            font-weight: bold;
+            color: #2F4F4F;
+        }
+
+        #controls {
+            margin: 10px 0;
+            text-align: center;
+            color: #2F4F4F;
+        }
+
+        #gameOver {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            display: none;
+            border: 3px solid #FF6347;
+        }
+
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px;
+        }
+
+        button:hover {
+            background: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎮 Simple Platformer Adventure</h1>
+    <div id="gameInfo">Score: <span id="score">0</span> | Lives: <span id="lives">3</span></div>
+
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        <div id="gameOver">
+            <h2>Game Over!</h2>
+            <p>Final Score: <span id="finalScore">0</span></p>
+            <button onclick="restartGame()">Play Again</button>
+        </div>
+    </div>
+
+    <div id="controls">
+        <p><strong>Controls:</strong> Arrow Keys or WASD to move, Spacebar or Up Arrow to jump</p>
+        <p>Collect coins (⭐) and avoid enemies (👾)!</p>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Game state
+        let gameRunning = true;
+        let score = 0;
+        let lives = 3;
+
+        // Player object
+        const player = {
+            x: 100,
+            y: 450,
+            width: 30,
+            height: 30,
+            velocityX: 0,
+            velocityY: 0,
+            speed: 5,
+            jumpPower: 15,
+            onGround: false,
+            color: '#FF6B6B'
+        };
+
+        // Game objects
+        let platforms = [];
+        let coins = [];
+        let enemies = [];
+
+        // Input handling
+        const keys = {};
+
+        document.addEventListener('keydown', (e) => {
+            keys[e.key.toLowerCase()] = true;
+        });
+
+        document.addEventListener('keyup', (e) => {
+            keys[e.key.toLowerCase()] = false;
+        });
+
+        // Initialize game objects
+        function initGame() {
+            // Create platforms
+            platforms = [
+                { x: 0, y: 550, width: 800, height: 50, color: '#8B4513' }, // Ground
+                { x: 200, y: 450, width: 150, height: 20, color: '#8B4513' },
+                { x: 400, y: 350, width: 150, height: 20, color: '#8B4513' },
+                { x: 600, y: 250, width: 150, height: 20, color: '#8B4513' },
+                { x: 100, y: 300, width: 100, height: 20, color: '#8B4513' },
+                { x: 500, y: 150, width: 200, height: 20, color: '#8B4513' }
+            ];
+
+            // Create coins
+            coins = [
+                { x: 250, y: 400, width: 20, height: 20, collected: false },
+                { x: 450, y: 300, width: 20, height: 20, collected: false },
+                { x: 650, y: 200, width: 20, height: 20, collected: false },
+                { x: 150, y: 250, width: 20, height: 20, collected: false },
+                { x: 550, y: 100, width: 20, height: 20, collected: false },
+                { x: 350, y: 500, width: 20, height: 20, collected: false }
+            ];
+
+            // Create enemies
+            enemies = [
+                { x: 300, y: 520, width: 25, height: 25, velocityX: 2, color: '#8A2BE2' },
+                { x: 500, y: 320, width: 25, height: 25, velocityX: -1.5, color: '#8A2BE2' },
+                { x: 150, y: 270, width: 25, height: 25, velocityX: 1, color: '#8A2BE2' }
+            ];
+        }
+
+        // Collision detection
+        function checkCollision(rect1, rect2) {
+            return rect1.x < rect2.x + rect2.width &&
+                   rect1.x + rect1.width > rect2.x &&
+                   rect1.y < rect2.y + rect2.height &&
+                   rect1.y + rect1.height > rect2.y;
+        }
+
+        // Handle input
+        function handleInput() {
+            if (!gameRunning) return;
+
+            // Horizontal movement
+            if (keys['arrowleft'] || keys['a']) {
+                player.velocityX = -player.speed;
+            } else if (keys['arrowright'] || keys['d']) {
+                player.velocityX = player.speed;
+            } else {
+                player.velocityX = 0;
+            }
+
+            // Jumping
+            if ((keys['arrowup'] || keys['w'] || keys[' ']) && player.onGround) {
+                player.velocityY = -player.jumpPower;
+                player.onGround = false;
+            }
+        }
+
+        // Update game physics
+        function update() {
+            if (!gameRunning) return;
+
+            // Apply gravity
+            player.velocityY += 0.8;
+
+            // Update player position
+            player.x += player.velocityX;
+            player.y += player.velocityY;
+
+            // Reset onGround flag
+            player.onGround = false;
+
+            // Platform collision
+            platforms.forEach(platform => {
+                if (checkCollision(player, platform)) {
+                    // Landing on top of platform
+                    if (player.velocityY > 0 && player.y < platform.y) {
+                        player.y = platform.y - player.height;
+                        player.velocityY = 0;
+                        player.onGround = true;
+                    }
+                    // Hitting platform from below
+                    else if (player.velocityY < 0 && player.y > platform.y) {
+                        player.y = platform.y + platform.height;
+                        player.velocityY = 0;
+                    }
+                    // Side collisions
+                    if (player.velocityX > 0 && player.x < platform.x) {
+                        player.x = platform.x - player.width;
+                    } else if (player.velocityX < 0 && player.x > platform.x) {
+                        player.x = platform.x + platform.width;
+                    }
+                }
+            });
+
+            // Boundary checks
+            if (player.x < 0) player.x = 0;
+            if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
+
+            // Fall off screen - lose a life
+            if (player.y > canvas.height) {
+                loseLife();
+            }
+
+            // Coin collection
+            coins.forEach(coin => {
+                if (!coin.collected && checkCollision(player, coin)) {
+                    coin.collected = true;
+                    score += 10;
+                    updateScore();
+                }
+            });
+
+            // Enemy movement and collision
+            enemies.forEach(enemy => {
+                enemy.x += enemy.velocityX;
+
+                // Bounce off screen edges
+                if (enemy.x <= 0 || enemy.x + enemy.width >= canvas.width) {
+                    enemy.velocityX = -enemy.velocityX;
+                }
+
+                // Player collision with enemy
+                if (checkCollision(player, enemy)) {
+                    loseLife();
+                }
+            });
+        }
+
+        // Draw everything
+        function draw() {
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw platforms
+            platforms.forEach(platform => {
+                ctx.fillStyle = platform.color;
+                ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
+
+                // Add some texture
+                ctx.fillStyle = '#654321';
+                ctx.fillRect(platform.x, platform.y, platform.width, 5);
+            });
+
+            // Draw coins
+            coins.forEach(coin => {
+                if (!coin.collected) {
+                    ctx.fillStyle = '#FFD700';
+                    ctx.beginPath();
+                    ctx.arc(coin.x + coin.width/2, coin.y + coin.height/2, coin.width/2, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Add star effect
+                    ctx.fillStyle = '#FFF';
+                    ctx.font = '16px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('⭐', coin.x + coin.width/2, coin.y + coin.height/2 + 5);
+                }
+            });
+
+            // Draw enemies
+            enemies.forEach(enemy => {
+                ctx.fillStyle = enemy.color;
+                ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
+
+                // Add enemy face
+                ctx.fillStyle = '#FFF';
+                ctx.font = '20px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('👾', enemy.x + enemy.width/2, enemy.y + enemy.height/2 + 6);
+            });
+
+            // Draw player
+            ctx.fillStyle = player.color;
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+
+            // Add player face
+            ctx.fillStyle = '#FFF';
+            ctx.font = '20px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('🎮', player.x + player.width/2, player.y + player.height/2 + 6);
+
+            // Draw clouds in background
+            drawClouds();
+        }
+
+        // Draw decorative clouds
+        function drawClouds() {
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+
+            // Cloud 1
+            ctx.beginPath();
+            ctx.arc(150, 80, 30, 0, Math.PI * 2);
+            ctx.arc(180, 80, 40, 0, Math.PI * 2);
+            ctx.arc(210, 80, 30, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Cloud 2
+            ctx.beginPath();
+            ctx.arc(500, 60, 25, 0, Math.PI * 2);
+            ctx.arc(525, 60, 35, 0, Math.PI * 2);
+            ctx.arc(550, 60, 25, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Game over
+        function loseLife() {
+            lives--;
+            updateLives();
+
+            if (lives <= 0) {
+                gameOver();
+            } else {
+                // Respawn player
+                player.x = 100;
+                player.y = 450;
+                player.velocityX = 0;
+                player.velocityY = 0;
+            }
+        }
+
+        function gameOver() {
+            gameRunning = false;
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('gameOver').style.display = 'block';
+        }
+
+        // Update UI
+        function updateScore() {
+            document.getElementById('score').textContent = score;
+        }
+
+        function updateLives() {
+            document.getElementById('lives').textContent = lives;
+        }
+
+        // Restart game
+        function restartGame() {
+            gameRunning = true;
+            score = 0;
+            lives = 3;
+            player.x = 100;
+            player.y = 450;
+            player.velocityX = 0;
+            player.velocityY = 0;
+
+            document.getElementById('gameOver').style.display = 'none';
+            initGame();
+            updateScore();
+            updateLives();
+        }
+
+        // Game loop
+        function gameLoop() {
+            handleInput();
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Start the game
+        initGame();
+        gameLoop();
+    </script>
+</body>
+</html>
