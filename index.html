@@ -3,184 +3,442 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple Games Collection</title>
+    <title>Modern Games Collection</title>
     <style>
-        body {
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+        :root {
+            --primary: #6366f1;
+            --secondary: #8b5cf6;
+            --accent: #06b6d4;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark-900: #0f172a;
+            --dark-800: #1e293b;
+            --dark-700: #334155;
+            --dark-600: #475569;
+            --white: #ffffff;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-300: #cbd5e1;
+            --gradient-primary: linear-gradient(135deg, var(--primary), var(--secondary));
+            --gradient-bg: linear-gradient(135deg, var(--dark-900) 0%, var(--dark-800) 100%);
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+        }
+
+        * {
             margin: 0;
-            padding: 40px;
-            background: linear-gradient(135deg, #1e1e2e, #2a2d3a);
-            color: white;
-            font-family: 'Courier New', monospace;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--gradient-bg);
+            color: var(--white);
+            line-height: 1.6;
             min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .hero-section {
+            position: relative;
+            padding: 4rem 2rem 2rem;
+            text-align: center;
+            background: linear-gradient(135deg, var(--dark-900) 0%, var(--dark-800) 50%, var(--dark-700) 100%);
+            overflow: hidden;
+        }
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="%23ffffff" opacity="0.05"/><circle cx="25" cy="25" r="0.5" fill="%23ffffff" opacity="0.03"/><circle cx="75" cy="75" r="0.5" fill="%23ffffff" opacity="0.03"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>') repeat;
+            opacity: 0.3;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-title {
+            font-size: clamp(2.5rem, 8vw, 4rem);
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: none;
+        }
+
+        .hero-subtitle {
+            font-size: 1.25rem;
+            color: var(--gray-300);
+            margin-bottom: 2rem;
+            font-weight: 300;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 2rem;
+            margin: 3rem 0;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent);
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--gray-300);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
         .container {
-            max-width: 800px;
+            max-width: 1200px;
             margin: 0 auto;
+            padding: 0 2rem;
         }
 
-        h1 {
-            text-align: center;
-            font-size: 3em;
-            margin-bottom: 40px;
-            color: #4a9eff;
-            text-shadow: 0 0 20px rgba(74, 158, 255, 0.3);
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+            margin: 3rem 0;
         }
 
         .game-card {
-            background: rgba(255, 255, 255, 0.1);
-            border: 2px solid #4a9eff;
-            border-radius: 15px;
-            padding: 30px;
-            margin: 20px 0;
-            transition: all 0.3s ease;
+            position: relative;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1.5rem;
+            padding: 2rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             backdrop-filter: blur(10px);
+            overflow: hidden;
+        }
+
+        .game-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--gradient-primary);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
         }
 
         .game-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(74, 158, 255, 0.3);
-            border-color: #00f0f0;
+            transform: translateY(-8px);
+            border-color: rgba(99, 102, 241, 0.3);
+            box-shadow: var(--shadow-xl), 0 0 40px rgba(99, 102, 241, 0.1);
+        }
+
+        .game-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .game-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .game-icon {
+            width: 3rem;
+            height: 3rem;
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            background: var(--gradient-primary);
         }
 
         .game-title {
-            font-size: 2em;
-            margin-bottom: 15px;
-            color: #00f0f0;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--white);
         }
 
         .game-description {
-            font-size: 1.1em;
-            margin-bottom: 20px;
-            opacity: 0.9;
+            color: var(--gray-300);
+            margin-bottom: 1.5rem;
             line-height: 1.6;
-        }
-
-        .play-button {
-            background: linear-gradient(45deg, #4a9eff, #00f0f0);
-            color: white;
-            text-decoration: none;
-            padding: 15px 30px;
-            border-radius: 8px;
-            font-size: 1.2em;
-            font-weight: bold;
-            display: inline-block;
-            transition: all 0.3s ease;
-            border: none;
-            cursor: pointer;
-        }
-
-        .play-button:hover {
-            transform: scale(1.05);
-            box-shadow: 0 5px 15px rgba(74, 158, 255, 0.4);
         }
 
         .features {
             list-style: none;
-            padding: 0;
-            margin: 20px 0;
+            margin: 1.5rem 0;
         }
 
         .features li {
-            padding: 5px 0;
-            opacity: 0.8;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem 0;
+            color: var(--gray-300);
+            font-size: 0.875rem;
         }
 
-        .features li:before {
-            content: "🎮 ";
-            margin-right: 10px;
+        .features li::before {
+            content: '✨';
+            font-size: 1rem;
         }
 
-        .controls {
-            background: rgba(0, 0, 0, 0.3);
-            padding: 20px;
-            border-radius: 10px;
-            margin-top: 20px;
+        .controls-section {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            margin: 1.5rem 0;
         }
 
-        .controls h3 {
-            margin-top: 0;
-            color: #4a9eff;
+        .controls-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .controls-text {
+            font-size: 0.8125rem;
+            color: var(--gray-300);
+            font-family: 'JetBrains Mono', monospace;
+            margin: 0.25rem 0;
+        }
+
+        .play-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--gradient-primary);
+            color: var(--white);
+            text-decoration: none;
+            padding: 0.875rem 2rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            font-size: 0.9375rem;
+            transition: all 0.2s ease;
+            border: none;
+            cursor: pointer;
+            box-shadow: var(--shadow-md);
+        }
+
+        .play-button:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
         }
 
         .footer {
             text-align: center;
-            margin-top: 60px;
-            opacity: 0.6;
+            padding: 4rem 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: 4rem;
+        }
+
+        .footer-content {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .footer-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--accent);
+        }
+
+        .footer-text {
+            color: var(--gray-300);
+            margin-bottom: 1rem;
         }
 
         .github-link {
-            color: #4a9eff;
+            color: var(--primary);
             text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s ease;
         }
 
         .github-link:hover {
-            color: #00f0f0;
+            color: var(--accent);
+        }
+
+        @media (max-width: 768px) {
+            .hero-section {
+                padding: 3rem 1rem 1.5rem;
+            }
+
+            .container {
+                padding: 0 1rem;
+            }
+
+            .games-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+
+            .game-card {
+                padding: 1.5rem;
+            }
+
+            .stats-grid {
+                gap: 1rem;
+            }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .game-icon {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .game-icon:nth-child(odd) {
+            animation-delay: -1.5s;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🎮 Simple Games Collection</h1>
+    <div class="hero-section">
+        <div class="hero-content">
+            <h1 class="hero-title">🎮 Game Collection</h1>
+            <p class="hero-subtitle">Modern web games with mobile support and fullscreen experience</p>
 
-        <div class="game-card">
-            <div class="game-title">🧱 Tetris</div>
-            <div class="game-description">
-                A classic falling blocks puzzle game with all the features you love from the original Tetris!
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <span class="stat-number">2</span>
+                    <span class="stat-label">Games</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">📱</span>
+                    <span class="stat-label">Mobile Ready</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">⛶</span>
+                    <span class="stat-label">Fullscreen</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">🎯</span>
+                    <span class="stat-label">Touch Controls</span>
+                </div>
             </div>
-
-            <ul class="features">
-                <li>7 classic tetromino pieces (I, O, T, S, Z, J, L)</li>
-                <li>Smooth movement and rotation controls</li>
-                <li>Line clearing with progressive difficulty</li>
-                <li>Scoring system with level progression</li>
-                <li>Pause/resume functionality</li>
-                <li>Retro arcade styling</li>
-                <li>📱 Mobile touch controls and fullscreen support</li>
-            </ul>
-
-            <div class="controls">
-                <h3>🎮 Controls</h3>
-                <p><strong>← →</strong> Move | <strong>↓</strong> Soft Drop | <strong>↑</strong> Rotate | <strong>Space</strong> Hard Drop | <strong>P</strong> Pause</p>
-                <p><strong>📱 Mobile:</strong> Touch controls available | <strong>⛶</strong> Fullscreen button</p>
-            </div>
-
-            <br>
-            <a href="tetris-game.html" class="play-button">▶️ Play Tetris</a>
-        </div>
-
-        <div class="game-card">
-            <div class="game-title">🏃 Simple Platformer</div>
-            <div class="game-description">
-                A fun 2D platformer adventure! Jump between platforms, collect coins, and avoid enemies in this classic side-scrolling game.
-            </div>
-
-            <ul class="features">
-                <li>Smooth player movement with jump mechanics</li>
-                <li>Multiple platforms at different heights</li>
-                <li>Collectible star coins for scoring</li>
-                <li>Moving enemies with collision detection</li>
-                <li>Lives system with respawn functionality</li>
-                <li>Beautiful gradient sky background</li>
-                <li>📱 Mobile touch controls and fullscreen support</li>
-            </ul>
-
-            <div class="controls">
-                <h3>🎮 Controls</h3>
-                <p><strong>← → or A D</strong> Move | <strong>↑ or W or Space</strong> Jump</p>
-                <p><strong>📱 Mobile:</strong> Touch controls available | <strong>⛶</strong> Fullscreen button</p>
-            </div>
-
-            <br>
-            <a href="platformer-game.html" class="play-button">▶️ Play Platformer</a>
-        </div>
-
-        <div class="footer">
-            <p>🌐 Served via ngrok for easy sharing</p>
-            <p>📱 <strong>Mobile Optimized:</strong> Touch controls and fullscreen support on all games</p>
-            <p>🎮 Perfect for mobile gaming - responsive design and intuitive touch controls</p>
-            <p><a href="https://github.com/alexxarias/simple-tetris-game" class="github-link" target="_blank">View Source on GitHub</a></p>
         </div>
     </div>
+
+    <div class="container">
+        <div class="games-grid">
+            <!-- Tetris Game -->
+            <div class="game-card">
+                <div class="game-header">
+                    <div class="game-icon">🧱</div>
+                    <h2 class="game-title">Classic Tetris</h2>
+                </div>
+
+                <p class="game-description">
+                    A pixel-perfect recreation of the beloved falling blocks puzzle game with all the features you expect from classic Tetris.
+                </p>
+
+                <ul class="features">
+                    <li>7 classic tetromino pieces (I, O, T, S, Z, J, L)</li>
+                    <li>Smooth movement and rotation controls</li>
+                    <li>Line clearing with progressive difficulty</li>
+                    <li>Scoring system with level progression</li>
+                    <li>Pause/resume functionality</li>
+                    <li>Retro arcade styling</li>
+                    <li>Mobile touch controls and fullscreen support</li>
+                </ul>
+
+                <div class="controls-section">
+                    <div class="controls-title">🎮 Controls</div>
+                    <div class="controls-text">← → Move | ↓ Soft Drop | ↑ Rotate | Space Hard Drop | P Pause</div>
+                    <div class="controls-text">📱 Mobile: Touch controls available | ⛶ Fullscreen button</div>
+                </div>
+
+                <a href="tetris-game.html" class="play-button">
+                    <span>▶️</span>
+                    Play Tetris
+                </a>
+            </div>
+
+            <!-- Platformer Game -->
+            <div class="game-card">
+                <div class="game-header">
+                    <div class="game-icon">🏃</div>
+                    <h2 class="game-title">Adventure Platformer</h2>
+                </div>
+
+                <p class="game-description">
+                    A fun 2D platformer adventure! Jump between platforms, collect coins, and avoid enemies in this classic side-scrolling experience.
+                </p>
+
+                <ul class="features">
+                    <li>Smooth player movement with jump mechanics</li>
+                    <li>Multiple platforms at different heights</li>
+                    <li>Collectible star coins for scoring</li>
+                    <li>Moving enemies with collision detection</li>
+                    <li>Lives system with respawn functionality</li>
+                    <li>Beautiful gradient sky background</li>
+                    <li>Mobile touch controls and fullscreen support</li>
+                </ul>
+
+                <div class="controls-section">
+                    <div class="controls-title">🎮 Controls</div>
+                    <div class="controls-text">← → or A D Move | ↑ or W or Space Jump</div>
+                    <div class="controls-text">📱 Mobile: Touch controls available | ⛶ Fullscreen button</div>
+                </div>
+
+                <a href="platformer-game.html" class="play-button">
+                    <span>▶️</span>
+                    Play Platformer
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <h3 class="footer-title">🌐 Powered by Modern Web Technology</h3>
+            <p class="footer-text">
+                <strong>Mobile Optimized:</strong> Touch controls and fullscreen support on all games
+            </p>
+            <p class="footer-text">
+                🎮 Perfect for mobile gaming - responsive design and intuitive touch controls
+            </p>
+            <p class="footer-text">
+                <a href="https://github.com/trailblazer-games/games" class="github-link" target="_blank">
+                    View Source on GitHub
+                </a>
+            </p>
+        </div>
+    </footer>
 </body>
 </html>
