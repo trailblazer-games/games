@@ -38,15 +38,17 @@
             }
             
             .game-board::after {
-                content: '💆 Drag | 👇 Swipe | ☝ Tap';
+                content: '👈👉 Drag | 👇 Drag slow/Swipe fast | ☝ Tap rotate';
                 position: absolute;
                 bottom: 10px;
                 left: 50%;
                 transform: translateX(-50%);
                 color: rgba(255, 255, 255, 0.5);
-                font-size: 12px;
+                font-size: 11px;
                 pointer-events: none;
                 z-index: 10;
+                text-align: center;
+                width: 90%;
             }
         }
 
@@ -290,7 +292,7 @@
             <p>🎮 <strong>Controls:</strong></p>
             <p>← → Move | ↓ Soft Drop | ↑ Rotate | Space Hard Drop</p>
             <p>📱 <strong>Mobile Gestures:</strong></p>
-            <p>💆 Drag left/right to move | 👇 Swipe down for soft drop | ☝ Tap to rotate</p>
+            <p>👈👉 Drag left/right to move | 👇 Drag down slowly for soft drop | 💨 Quick swipe down for hard drop | ☝ Tap to rotate</p>
             <p>P to Pause</p>
         </div>
 
@@ -704,9 +706,14 @@
         let touchStartTime = 0;
         let isDragging = false;
         let lastMoveTime = 0;
+        let lastDropTime = 0;
+        let totalVerticalMovement = 0;
         const DRAG_THRESHOLD = 10;
         const SWIPE_THRESHOLD = 50;
+        const SWIPE_VELOCITY_THRESHOLD = 0.5; // pixels per ms for quick swipe detection
         const MOVE_DELAY = 150; // ms between horizontal moves
+        const DROP_DELAY = 200; // ms between vertical drops
+        const CELL_HEIGHT = 32; // height of one tetris cell
 
         function addMobileGestureControls() {
             const canvas = document.getElementById('gameBoard');
@@ -718,6 +725,7 @@
                 touchStartY = touch.clientY;
                 touchStartTime = Date.now();
                 isDragging = false;
+                totalVerticalMovement = 0;
             }, { passive: false });
 
             canvas.addEventListener('touchmove', (e) => {
@@ -746,14 +754,20 @@
                     }
                 }
                 
-                // Vertical movement (swipe down for soft drop)
-                if (isDragging && deltaY > SWIPE_THRESHOLD && deltaY > Math.abs(deltaX)) {
-                    if (canPlacePiece(currentPiece, currentPiece.x, currentPiece.y + 1)) {
-                        currentPiece.y++;
-                        score += 1;
-                        touchStartY = touch.clientY; // Reset for continuous movement
-                        updateDisplay();
-                        draw();
+                // Vertical movement (controlled soft drop based on drag distance)
+                if (isDragging && deltaY > DRAG_THRESHOLD && deltaY > Math.abs(deltaX)) {
+                    const now = Date.now();
+                    const cellsToMove = Math.floor(deltaY / CELL_HEIGHT);
+                    
+                    if (cellsToMove > totalVerticalMovement && now - lastDropTime > DROP_DELAY) {
+                        if (canPlacePiece(currentPiece, currentPiece.x, currentPiece.y + 1)) {
+                            currentPiece.y++;
+                            score += 1;
+                            totalVerticalMovement++;
+                            lastDropTime = now;
+                            updateDisplay();
+                            draw();
+                        }
                     }
                 }
             }, { passive: false });
@@ -764,9 +778,25 @@
                 
                 const touchEndTime = Date.now();
                 const touchDuration = touchEndTime - touchStartTime;
+                const touch = e.changedTouches[0];
+                const deltaY = touch.clientY - touchStartY;
                 
+                // Quick swipe down = hard drop
+                if (isDragging && deltaY > SWIPE_THRESHOLD) {
+                    const swipeVelocity = deltaY / touchDuration; // pixels per ms
+                    
+                    if (swipeVelocity > SWIPE_VELOCITY_THRESHOLD) {
+                        // Quick swipe - hard drop
+                        while (canPlacePiece(currentPiece, currentPiece.x, currentPiece.y + 1)) {
+                            currentPiece.y++;
+                            score += 2; // More points for hard drop
+                        }
+                        updateDisplay();
+                        draw();
+                    }
+                }
                 // Tap to rotate (short touch without dragging)
-                if (!isDragging && touchDuration < 300) {
+                else if (!isDragging && touchDuration < 300) {
                     const rotated = rotatePiece(currentPiece);
                     if (canPlacePiece(currentPiece, currentPiece.x, currentPiece.y, rotated)) {
                         currentPiece.shape = rotated;
@@ -775,6 +805,7 @@
                 }
                 
                 isDragging = false;
+                totalVerticalMovement = 0;
             }, { passive: false });
         }
 
